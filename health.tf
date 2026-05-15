@@ -9,7 +9,11 @@
 #}
 
 data "http" "talos_health" {
-  count    = 1
+  # Post-bootstrap apply gate. On a cluster whose API is firewalled to
+  # private-only access (e.g. Tailscale-only), the probe can stall every
+  # apply — set health_check_enabled=false to skip it once the cluster
+  # is established.
+  count    = var.health_check_enabled ? 1 : 0
   url      = "https://${local.bootstrap_endpoint}:${local.api_port_k8s}/version"
   insecure = true
   retry {
