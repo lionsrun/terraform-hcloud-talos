@@ -437,10 +437,11 @@ variable "control_plane_allow_schedule" {
 
 variable "worker_nodes" {
   type = list(object({
-    id     = number
-    name   = optional(string)
-    type   = string
-    labels = optional(map(string), {})
+    id              = number
+    name            = optional(string)
+    type            = string
+    placement_group = optional(string, "worker")
+    labels          = optional(map(string), {})
     taints = optional(list(object({
       key    = string
       value  = string
@@ -456,6 +457,12 @@ variable "worker_nodes" {
     - id: Stable node id starting at 1 (used for naming and IP allocation).
     - name: Optional custom node name. If omitted, the module uses the default generated name.
     - type: Server type (cpx11, cpx12, cpx21, cpx22, cpx31, cpx32, cpx41, cpx42, cpx51, cpx52, cpx62, cax11, cax21, cax31, cax41, ccx13, ccx23, ccx33, ccx43, ccx53, ccx63, cx22, cx23, cx32, cx33, cx42, cx43, cx52, cx53)
+    - placement_group: Logical Hetzner placement-group bucket for this node
+      (default: "worker"). The module creates one `spread` placement group per
+      distinct value across all worker_nodes, so callers can shard pools
+      (e.g. "system", "database", "workers") onto separate groups to keep
+      scaling and host-affinity boundaries clean. Hetzner's hard limit is 10
+      servers per placement group — split further if a pool exceeds that.
     - labels: Map of Kubernetes labels to apply to this node (default: {})
     - taints: List of Kubernetes taints to apply to this node (default: [])
     
